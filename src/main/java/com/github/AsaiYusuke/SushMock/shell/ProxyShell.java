@@ -12,7 +12,6 @@ import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.server.shell.InvertedShell;
 
-import com.github.AsaiYusuke.SushMock.exception.ExecutionModeMismatch;
 import com.github.AsaiYusuke.SushMock.key.KeyTank;
 import com.github.AsaiYusuke.SushMock.task.ShellTask;
 import com.github.AsaiYusuke.SushMock.util.Constants;
@@ -120,18 +119,6 @@ public class ProxyShell implements InvertedShell {
 			shell.setChannel(channel);
 
 			shell.execute();
-
-		} catch (ExecutionModeMismatch e) {
-			System.err.println(e.getMessage());
-			if (channel != null && channel.isOpen()) {
-				channel.close();
-			}
-			if (session != null && !session.isClosed()) {
-				session.close();
-			}
-			if (client != null && !client.isClosed()) {
-				client.stop();
-			}
 
 		} catch (IOException e) {
 			System.err.println(e.getMessage());

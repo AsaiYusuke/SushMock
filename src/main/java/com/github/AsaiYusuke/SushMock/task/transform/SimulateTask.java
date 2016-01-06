@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.bouncycastle.util.Arrays;
 
-import com.github.AsaiYusuke.SushMock.exception.ExecutionModeMismatch;
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
 import com.github.AsaiYusuke.SushMock.exception.TaskSleepRequired;
@@ -15,9 +14,9 @@ import com.github.AsaiYusuke.SushMock.ext.SimulateTransformer;
 import com.github.AsaiYusuke.SushMock.record.Record;
 import com.github.AsaiYusuke.SushMock.record.Sequence;
 import com.github.AsaiYusuke.SushMock.util.Constants;
-import com.github.AsaiYusuke.SushMock.util.PipedStream;
 import com.github.AsaiYusuke.SushMock.util.Constants.ExecutionType;
 import com.github.AsaiYusuke.SushMock.util.Constants.StreamType;
+import com.github.AsaiYusuke.SushMock.util.PipedStream;
 
 public class SimulateTask extends AbstractTransformTask {
 
@@ -32,12 +31,8 @@ public class SimulateTask extends AbstractTransformTask {
 
 	private static Map<String, SimulateTransformer> exts;
 
-	public SimulateTask() throws IOException, ExecutionModeMismatch {
+	public SimulateTask() throws IOException {
 		super();
-
-		if (Constants.Option.getExecutionType() != ExecutionType.Simulate) {
-			throw new ExecutionModeMismatch();
-		}
 
 		out = new PipedStream();
 		err = new PipedStream();

@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
 
-import com.github.AsaiYusuke.SushMock.exception.ExecutionModeMismatch;
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
 import com.github.AsaiYusuke.SushMock.exception.TaskSleepRequired;
@@ -27,12 +26,8 @@ public class RecordTask extends AbstractTransformTask {
 
 	private static Map<String, RecordTransformer> exts;
 
-	public RecordTask() throws ExecutionModeMismatch {
+	public RecordTask() {
 		super();
-
-		if (Constants.Option.getExecutionType() != ExecutionType.Record) {
-			throw new ExecutionModeMismatch();
-		}
 
 		historyList = Lists.newLinkedList();
 		dataDirStr = Constants.Option.getDataDir();

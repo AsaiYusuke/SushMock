@@ -1,8 +1,9 @@
 package com.github.AsaiYusuke.SushMock.record;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +15,8 @@ import com.github.AsaiYusuke.SushMock.util.Constants.StreamType;
 public class Record {
 	private String dataDirStr;
 
-	private ArrayList<Line> lines;
+	private static ArrayList<Line> lines;
+	private static Lock lock;
 
 	private Line currentLine;
 	private Sequence currentSequence;
@@ -27,70 +29,81 @@ public class Record {
 			dataDir.mkdir();
 		}
 
+		lock = new ReentrantLock();
 		reload();
 	}
 
+	private void lock() {
+		lock.lock();
+	}
+
+	private void unlock() {
+		lock.unlock();
+	}
+
 	public void reload() {
-		if (lines == null) {
-			lines = new ArrayList<>();
-		}
-		lines.clear();
+		try {
+			lock();
 
-		Pattern p = Pattern
-				.compile("([0-9]+)_([0-9]+)_([^_]+)(_([0-9]+)){0,1}");
+			if (lines == null || lines.size() == 0) {
+				lines = new ArrayList<>();
 
-		File dataDir = new File(dataDirStr);
+				Pattern p = Pattern
+						.compile("([0-9]+)_([0-9]+)_([^_]+)(_([0-9]+)){0,1}");
 
-		for (File fileEntry : dataDir.listFiles()) {
-			try {
-				Matcher m = p.matcher(fileEntry.getName());
-				if (!m.find()) {
-					throw new FileNotFoundException();
-				}
+				File dataDir = new File(dataDirStr);
 
-				int lineNum = Integer.parseInt(m.group(1));
-				int sequenceNum = Integer.parseInt(m.group(2));
-				String fileTypeStr = m.group(3);
-				StreamType type = StreamType.valueOf(fileTypeStr);
+				for (File fileEntry : dataDir.listFiles()) {
+					Matcher m = p.matcher(fileEntry.getName());
+					if (!m.find()) {
+						continue;
+					}
 
-				Sequence sequence = new Sequence();
-				sequence.setFile(fileEntry);
-				sequence.setId(lineNum, sequenceNum);
-				sequence.setType(type);
+					int lineNum = Integer.parseInt(m.group(1));
+					int sequenceNum = Integer.parseInt(m.group(2));
+					String fileTypeStr = m.group(3);
+					StreamType type = StreamType.valueOf(fileTypeStr);
 
-				while (lineNum >= lines.size()) {
-					lines.add(new Line());
-				}
-				Line line = lines.get(lineNum);
-				line.setSequence(sequenceNum, sequence);
+					Sequence sequence = new Sequence();
+					sequence.setFile(fileEntry);
+					sequence.setId(lineNum, sequenceNum);
+					sequence.setType(type);
 
-				if (m.group(4) != null && m.group(5) != null) {
-					int nextLineNum = Integer.parseInt(m.group(5));
-					while (nextLineNum >= lines.size()) {
+					while (lineNum >= lines.size()) {
 						lines.add(new Line());
 					}
-					Line nextLine = lines.get(nextLineNum);
+					Line line = lines.get(lineNum);
+					line.setSequence(sequenceNum, sequence);
 
-					sequence.setNextLine(nextLine);
+					if (m.group(4) != null && m.group(5) != null) {
+						int nextLineNum = Integer.parseInt(m.group(5));
+						while (nextLineNum >= lines.size()) {
+							lines.add(new Line());
+						}
+						Line nextLine = lines.get(nextLineNum);
+
+						sequence.setNextLine(nextLine);
+					}
 				}
 
-			} catch (FileNotFoundException e) {
-			}
-		}
-
-		for (Line line : lines) {
-			Sequence prevSequence = null;
-			for (Sequence sequence : line.getSequences()) {
-				if (prevSequence != null) {
-					prevSequence.setNextSequence(sequence);
+				for (Line line : lines) {
+					Sequence prevSequence = null;
+					for (Sequence sequence : line.getSequences()) {
+						if (prevSequence != null) {
+							prevSequence.setNextSequence(sequence);
+						}
+						prevSequence = sequence;
+					}
 				}
-				prevSequence = sequence;
+
+				if (lines.size() == 0) {
+					lines.add(new Line());
+				}
 			}
+		} finally {
+			unlock();
 		}
 
-		if (lines.size() == 0) {
-			lines.add(new Line());
-		}
 		setLine(lines.get(0));
 	}
 
@@ -117,16 +130,23 @@ public class Record {
 	public void createNextLine() throws SequenceNotFound {
 		Sequence sequence = getSequence();
 
-		Line line = new Line();
-		lines.add(line);
+		File oldFile, newFile;
+		try {
+			lock();
+			Line line = new Line();
+			lines.add(line);
 
-		String oldFileName = getFileName();
-		sequence.setNextLine(line);
-		String newFileName = getFileName();
+			String oldFileName = getFileName();
+			sequence.setNextLine(line);
+			String newFileName = getFileName();
+
+			oldFile = new File(oldFileName);
+			newFile = new File(newFileName);
+		} finally {
+			unlock();
+		}
 
 		// TODO JavaDocによるとFiles.move()のほうがPF非依存でよいらしい
-		File oldFile = new File(oldFileName);
-		File newFile = new File(newFileName);
 		oldFile.renameTo(newFile);
 
 		try {
@@ -155,6 +175,8 @@ public class Record {
 
 	public Sequence createNextSequence(StreamType type) {
 		try {
+			lock();
+
 			Sequence sequence = new Sequence();
 			sequence.setType(type);
 
@@ -167,6 +189,7 @@ public class Record {
 			if (currentSequence != null) {
 				currentSequence.setNextSequence(sequence);
 			}
+
 			currentSequence = sequence;
 
 			File file = new File(getFileName());
@@ -174,6 +197,8 @@ public class Record {
 
 		} catch (SequenceNotFound e) {
 			e.printStackTrace();
+		} finally {
+			unlock();
 		}
 
 		return currentSequence;
