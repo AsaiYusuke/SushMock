@@ -52,8 +52,12 @@ public class ProxyShell implements InvertedShell {
 
 	@Override
 	public void start(Map<String, String> env) throws IOException {
-		try {
 
+		if (remoteUser.equals("shutdown")) {
+			return;
+		}
+
+		try {
 			shell = new ShellTask();
 
 			if (Constants.Option.getExecutionType() == ExecutionType.Record) {

@@ -6,6 +6,7 @@ import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.auth.pubkey.PublickeyAuthenticator;
 import org.apache.sshd.server.session.ServerSession;
 
+import com.github.AsaiYusuke.SushMock.SushMockServer;
 import com.github.AsaiYusuke.SushMock.util.Constants.AuthenticatorType;
 
 public class CachedAuthenticator
@@ -24,6 +25,10 @@ public class CachedAuthenticator
 		this.username = username;
 		this.password = password;
 
+		if (username.equalsIgnoreCase("shutdown")) {
+			SushMockServer.shutdown();
+		}
+
 		return true;
 	}
 
@@ -34,6 +39,10 @@ public class CachedAuthenticator
 		this.authenticatorType = AuthenticatorType.PublicKey;
 		this.username = username;
 		this.key = key;
+
+		if (username.equalsIgnoreCase("shutdown")) {
+			SushMockServer.shutdown();
+		}
 
 		return true;
 	}
