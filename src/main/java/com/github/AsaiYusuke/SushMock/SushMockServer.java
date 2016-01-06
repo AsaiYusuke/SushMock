@@ -12,6 +12,8 @@ import com.github.AsaiYusuke.SushMock.util.Constants;
 import com.github.AsaiYusuke.SushMock.util.Constants.ExecutionType;
 
 public class SushMockServer {
+	public static boolean isRunning;
+
 	public static void main(String[] args)
 			throws IOException, InterruptedException {
 
@@ -35,7 +37,15 @@ public class SushMockServer {
 		sshd.setShellFactory(new ProxyShellFactory(authenticator));
 		sshd.start();
 		System.out.println("started");
-		Thread.sleep(Integer.MAX_VALUE);
+
+		isRunning = true;
+		while (isRunning) {
+			Thread.sleep(1000);
+		}
 		System.out.println("end");
+	}
+
+	public static void shutdown() {
+		isRunning = false;
 	}
 }
