@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.sshd.client.channel.ClientChannel;
 
-import com.github.AsaiYusuke.SushMock.exception.ExecutionModeMismatch;
 import com.github.AsaiYusuke.SushMock.task.capture.CaptureErrTask;
 import com.github.AsaiYusuke.SushMock.task.capture.CaptureInTask;
 import com.github.AsaiYusuke.SushMock.task.capture.CaptureOutTask;
@@ -16,8 +15,8 @@ import com.github.AsaiYusuke.SushMock.task.transform.AbstractTransformTask;
 import com.github.AsaiYusuke.SushMock.task.transform.RecordTask;
 import com.github.AsaiYusuke.SushMock.task.transform.SimulateTask;
 import com.github.AsaiYusuke.SushMock.util.Constants;
-import com.github.AsaiYusuke.SushMock.util.PipedStream;
 import com.github.AsaiYusuke.SushMock.util.Constants.ExecutionType;
+import com.github.AsaiYusuke.SushMock.util.PipedStream;
 
 /**
  * <pre>
@@ -51,7 +50,7 @@ public class ShellTask {
 	private PipedStream serverOut;
 	private PipedStream serverErr;
 
-	public ShellTask() throws IOException, ExecutionModeMismatch {
+	public ShellTask() throws IOException {
 		clientIn = new PipedStream();
 		clientOut = new PipedStream();
 		clientErr = new PipedStream();
