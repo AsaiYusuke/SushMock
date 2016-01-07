@@ -1,8 +1,9 @@
 package com.github.AsaiYusuke.SushMock.task.transform;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
@@ -139,20 +140,20 @@ public class SimulateTask extends AbstractTransformTask {
 	}
 
 	private void inputTask(Sequence sequence)
-			throws SequenceNotFound, LineNotFound {
-		File file = sequence.getFile();
+			throws SequenceNotFound, LineNotFound, IOException {
+		Path path = sequence.getPath();
 		try {
 			lock();
 			int bufLen = historyBuffer.getLength();
-			if (bufLen >= file.length()) {
+			long fileLen = Files.size(path);
+			if (bufLen >= fileLen) {
 				record.setNextSequence();
-				byte[] partBuffer = historyBuffer
-						.getStream((int) file.length());
+				byte[] partBuffer = historyBuffer.getStream((int) fileLen);
 
 				if (!sequence.checkFile(partBuffer)) {
 					record.setNextLine();
 				} else {
-					if (bufLen == file.length()) {
+					if (bufLen == fileLen) {
 						historyBuffer.rewind();
 					}
 				}
@@ -165,14 +166,14 @@ public class SimulateTask extends AbstractTransformTask {
 	private void inputEchoTask(Sequence sequence)
 			throws SequenceNotFound, LineNotFound, IOException {
 		// 重複コード・・・
-		File file = sequence.getFile();
+		Path path = sequence.getPath();
 		try {
 			lock();
 			int bufLen = historyBuffer.getLength();
-			if (bufLen >= file.length()) {
+			long fileLen = Files.size(path);
+			if (bufLen >= fileLen) {
 				record.setNextSequence();
-				byte[] partBuffer = historyBuffer
-						.getStream((int) file.length());
+				byte[] partBuffer = historyBuffer.getStream((int) fileLen);
 
 				if (!sequence.checkFile(partBuffer)) {
 					record.setNextLine();
@@ -180,7 +181,7 @@ public class SimulateTask extends AbstractTransformTask {
 					byte[] buf = simulateTransform(sequence);
 					out.getSrc().write(buf);
 
-					if (bufLen == file.length()) {
+					if (bufLen == fileLen) {
 						historyBuffer.rewind();
 					}
 				}

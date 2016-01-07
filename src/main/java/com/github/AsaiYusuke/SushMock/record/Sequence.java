@@ -1,10 +1,9 @@
 package com.github.AsaiYusuke.SushMock.record;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -17,7 +16,8 @@ public class Sequence {
 	private int lineNum;
 	private int sequenceNum;
 
-	private File file;
+	// private File file;
+	private Path path;
 	private byte[] byteArray;
 
 	private StreamType type;
@@ -48,23 +48,19 @@ public class Sequence {
 		this.sequenceNum = sequenceNum;
 	}
 
-	public File getFile() {
-		return file;
+	public Path getPath() {
+		return path;
 	}
 
-	public void setFile(File file) {
-		this.file = file;
+	public void setPath(Path path) {
+		this.path = path;
 	}
 
 	public byte[] getByteArray() {
 		if (byteArray == null) {
-			byteArray = new byte[(int) file.length()];
 			try {
-				FileInputStream fis = new FileInputStream(file);
-				fis.read(byteArray);
-				fis.close();
-			} catch (FileNotFoundException e) {
-			} catch (IOException e) {
+				byteArray = Files.readAllBytes(path);
+			} catch (IOException e1) {
 			}
 		}
 		return byteArray;
@@ -72,10 +68,8 @@ public class Sequence {
 
 	private void saveByteArray() {
 		try {
-			FileOutputStream fos = new FileOutputStream(file);
-			fos.write(byteArray);
-			fos.close();
-		} catch (IOException e2) {
+			Files.write(path, byteArray, StandardOpenOption.WRITE);
+		} catch (IOException e) {
 		}
 	}
 

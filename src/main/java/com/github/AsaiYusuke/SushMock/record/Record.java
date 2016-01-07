@@ -1,6 +1,12 @@
 package com.github.AsaiYusuke.SushMock.record;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -21,12 +27,13 @@ public class Record {
 	private Line currentLine;
 	private Sequence currentSequence;
 
-	public Record(String dataDirStr) {
+	public Record(String dataDirStr) throws IOException {
 		this.dataDirStr = dataDirStr;
 
-		File dataDir = new File(dataDirStr);
-		if (!dataDir.exists()) {
-			dataDir.mkdir();
+		Path dataDirPath = Paths.get(dataDirStr);
+		if (!Files.exists(dataDirPath,
+				new LinkOption[] { LinkOption.NOFOLLOW_LINKS })) {
+			Files.createDirectories(dataDirPath);
 		}
 
 		lock = new ReentrantLock();
@@ -51,39 +58,45 @@ public class Record {
 				Pattern p = Pattern
 						.compile("([0-9]+)_([0-9]+)_([^_]+)(_([0-9]+)){0,1}");
 
-				File dataDir = new File(dataDirStr);
+				Path dataDirPath = Paths.get(dataDirStr);
 
-				for (File fileEntry : dataDir.listFiles()) {
-					Matcher m = p.matcher(fileEntry.getName());
-					if (!m.find()) {
-						continue;
-					}
+				try (DirectoryStream<Path> stream = Files
+						.newDirectoryStream(dataDirPath)) {
+					for (Path filePath : stream) {
+						Matcher m = p
+								.matcher(filePath.getFileName().toString());
+						if (!m.find()) {
+							continue;
+						}
 
-					int lineNum = Integer.parseInt(m.group(1));
-					int sequenceNum = Integer.parseInt(m.group(2));
-					String fileTypeStr = m.group(3);
-					StreamType type = StreamType.valueOf(fileTypeStr);
+						int lineNum = Integer.parseInt(m.group(1));
+						int sequenceNum = Integer.parseInt(m.group(2));
+						String fileTypeStr = m.group(3);
+						StreamType type = StreamType.valueOf(fileTypeStr);
 
-					Sequence sequence = new Sequence();
-					sequence.setFile(fileEntry);
-					sequence.setId(lineNum, sequenceNum);
-					sequence.setType(type);
+						Sequence sequence = new Sequence();
+						sequence.setPath(filePath);
+						sequence.setId(lineNum, sequenceNum);
+						sequence.setType(type);
 
-					while (lineNum >= lines.size()) {
-						lines.add(new Line());
-					}
-					Line line = lines.get(lineNum);
-					line.setSequence(sequenceNum, sequence);
-
-					if (m.group(4) != null && m.group(5) != null) {
-						int nextLineNum = Integer.parseInt(m.group(5));
-						while (nextLineNum >= lines.size()) {
+						while (lineNum >= lines.size()) {
 							lines.add(new Line());
 						}
-						Line nextLine = lines.get(nextLineNum);
+						Line line = lines.get(lineNum);
+						line.setSequence(sequenceNum, sequence);
 
-						sequence.setNextLine(nextLine);
+						if (m.group(4) != null && m.group(5) != null) {
+							int nextLineNum = Integer.parseInt(m.group(5));
+							while (nextLineNum >= lines.size()) {
+								lines.add(new Line());
+							}
+							Line nextLine = lines.get(nextLineNum);
+
+							sequence.setNextLine(nextLine);
+						}
 					}
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 
 				for (Line line : lines) {
@@ -130,7 +143,6 @@ public class Record {
 	public void createNextLine() throws SequenceNotFound {
 		Sequence sequence = getSequence();
 
-		File oldFile, newFile;
 		try {
 			lock();
 			Line line = new Line();
@@ -140,14 +152,14 @@ public class Record {
 			sequence.setNextLine(line);
 			String newFileName = getFileName();
 
-			oldFile = new File(oldFileName);
-			newFile = new File(newFileName);
+			Path srcPath = Paths.get(oldFileName);
+			Files.move(srcPath, srcPath.resolveSibling(newFileName),
+					StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			e.printStackTrace();
 		} finally {
 			unlock();
 		}
-
-		// TODO JavaDocによるとFiles.move()のほうがPF非依存でよいらしい
-		oldFile.renameTo(newFile);
 
 		try {
 			this.setNextLine();
@@ -192,8 +204,8 @@ public class Record {
 
 			currentSequence = sequence;
 
-			File file = new File(getFileName());
-			sequence.setFile(file);
+			Path path = Paths.get(getFileName());
+			sequence.setPath(path);
 
 		} catch (SequenceNotFound e) {
 			e.printStackTrace();
