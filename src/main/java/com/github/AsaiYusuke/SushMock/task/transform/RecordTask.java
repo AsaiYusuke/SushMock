@@ -127,18 +127,13 @@ public class RecordTask extends AbstractTransformTask {
 								&& curHistory.getType()
 										.equals(StreamType.Output)) {
 
-							byte[] prevBuf = prevHistory.getStream();
-							byte[] curBuf = curHistory.getStream();
+							int prevLen = prevHistory.getLength();
+							int curLen = curHistory.getLength();
+							int compSize = curLen > prevLen ? prevLen : curLen;
 
-							int prevSize = prevBuf.length;
-							int curSize = curBuf.length;
-							int compSize = curSize > prevSize ? prevSize
-									: curSize;
-
-							byte[] partPrevBuf = Arrays.copyOfRange(prevBuf, 0,
-									compSize);
-							byte[] partCurBuf = Arrays.copyOfRange(curBuf, 0,
-									compSize);
+							byte[] partPrevBuf = prevHistory
+									.getStream(compSize);
+							byte[] partCurBuf = curHistory.getStream(compSize);
 
 							if (Arrays.equals(partPrevBuf, partCurBuf)) {
 								HistoryBuffer history = new HistoryBuffer(
@@ -146,22 +141,19 @@ public class RecordTask extends AbstractTransformTask {
 								history.addStream(partPrevBuf);
 								tempHistoryList.add(history);
 
-								if (prevSize > compSize) {
-									byte[] restBuf = Arrays.copyOfRange(prevBuf,
-											compSize, prevSize);
+								if (prevLen > compSize) {
+									byte[] restBuf = prevHistory.getStream();
 									history = new HistoryBuffer(
 											prevHistory.getType());
 									history.addStream(restBuf);
 									tempHistoryList.add(history);
 								}
 
-								if (curSize > compSize) {
-									byte[] restBuf = Arrays.copyOfRange(curBuf,
-											compSize, curSize);
+								if (curLen > compSize) {
+									byte[] restBuf = curHistory.getStream();
 									history = new HistoryBuffer(
 											curHistory.getType());
 									history.addStream(restBuf);
-									// tempHistoryList.add(history);
 									prevHistory = history;
 								} else {
 									prevHistory = null;
@@ -169,6 +161,10 @@ public class RecordTask extends AbstractTransformTask {
 
 								result = true;
 								continue;
+
+							} else {
+								prevHistory.resetMark();
+								curHistory.resetMark();
 							}
 						}
 						tempHistoryList.add(prevHistory);

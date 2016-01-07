@@ -32,7 +32,8 @@ public class HistoryBuffer {
 	}
 
 	public byte[] getStream() {
-		return getStream(streamBuffer.position());
+		int length = getLength();
+		return getStream(length);
 	}
 
 	public byte[] getStream(int length) {
@@ -66,5 +67,19 @@ public class HistoryBuffer {
 	public void rewind() {
 		streamBuffer.rewind();
 		streamBuffer.mark();
+	}
+
+	public int getLength() {
+		int curPos = streamBuffer.position();
+		streamBuffer.reset();
+		int prevPos = streamBuffer.position();
+		streamBuffer.position(curPos);
+		return curPos - prevPos;
+	}
+
+	public void resetMark() {
+		int curPos = streamBuffer.position();
+		rewind();
+		streamBuffer.position(curPos);
 	}
 }
