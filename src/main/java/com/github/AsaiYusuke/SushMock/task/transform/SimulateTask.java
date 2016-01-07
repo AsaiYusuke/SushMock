@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.bouncycastle.util.Arrays;
-
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
 import com.github.AsaiYusuke.SushMock.exception.TaskSleepRequired;
@@ -129,15 +127,10 @@ public class SimulateTask extends AbstractTransformTask {
 	private void outputTask(Sequence sequence)
 			throws SequenceNotFound, IOException {
 
-		StreamType type = sequence.getType();
-
 		record.setNextSequence();
 
-		byte[] buf = sequence.getByteArray();
-		for (SimulateTransformer trans : exts.values()) {
-			buf = trans.transform(buf, type);
-		}
-
+		byte[] buf = simulateTransform(sequence);
+		StreamType type = sequence.getType();
 		if (type == StreamType.Output) {
 			out.getSrc().write(buf);
 		} else if (type == StreamType.Error) {
@@ -150,16 +143,16 @@ public class SimulateTask extends AbstractTransformTask {
 		File file = sequence.getFile();
 		try {
 			lock();
-			if (historyBuffer.getPosition() >= file.length()) {
+			int bufLen = historyBuffer.getLength();
+			if (bufLen >= file.length()) {
 				record.setNextSequence();
-				byte[] partBuffer = Arrays.copyOfRange(
-						historyBuffer.getStream((int) file.length()), 0,
-						(int) file.length());
+				byte[] partBuffer = historyBuffer
+						.getStream((int) file.length());
 
 				if (!sequence.checkFile(partBuffer)) {
 					record.setNextLine();
 				} else {
-					if (historyBuffer.getPosition() == file.length()) {
+					if (bufLen == file.length()) {
 						historyBuffer.rewind();
 					}
 				}
@@ -175,24 +168,19 @@ public class SimulateTask extends AbstractTransformTask {
 		File file = sequence.getFile();
 		try {
 			lock();
-			if (historyBuffer.getPosition() >= file.length()) {
+			int bufLen = historyBuffer.getLength();
+			if (bufLen >= file.length()) {
 				record.setNextSequence();
-				byte[] partBuffer = Arrays.copyOfRange(
-						historyBuffer.getStream((int) file.length()), 0,
-						(int) file.length());
+				byte[] partBuffer = historyBuffer
+						.getStream((int) file.length());
 
 				if (!sequence.checkFile(partBuffer)) {
 					record.setNextLine();
 				} else {
-					byte[] buf = sequence.getByteArray();
-					StreamType type = sequence.getType();
-
-					for (SimulateTransformer trans : exts.values()) {
-						buf = trans.transform(buf, type);
-					}
+					byte[] buf = simulateTransform(sequence);
 					out.getSrc().write(buf);
 
-					if (historyBuffer.getPosition() == file.length()) {
+					if (bufLen == file.length()) {
 						historyBuffer.rewind();
 					}
 				}
@@ -200,5 +188,14 @@ public class SimulateTask extends AbstractTransformTask {
 		} finally {
 			unlock();
 		}
+	}
+
+	private byte[] simulateTransform(Sequence sequence) {
+		byte[] buf = sequence.getByteArray();
+		StreamType type = sequence.getType();
+		for (SimulateTransformer trans : exts.values()) {
+			buf = trans.transform(buf, type);
+		}
+		return buf;
 	}
 }
