@@ -1,7 +1,7 @@
 package com.github.AsaiYusuke.SushMock;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -27,7 +27,7 @@ public class SushMockServer {
 		SshServer sshd = SshServer.setUpDefaultServer();
 		sshd.setPort(option.getListenPort());
 		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(
-				new File(Constants.DefaultKeyFile)));
+				Paths.get(Constants.DefaultKeyFile)));
 
 		CachedAuthenticator authenticator = new CachedAuthenticator();
 		sshd.setPasswordAuthenticator(authenticator);

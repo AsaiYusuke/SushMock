@@ -1,5 +1,6 @@
 package com.github.AsaiYusuke.SushMock.task.transform;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class RecordTask extends AbstractTransformTask {
 
 	private static Map<String, RecordTransformer> exts;
 
-	public RecordTask() {
+	public RecordTask() throws IOException {
 		super();
 
 		historyList = Lists.newLinkedList();
