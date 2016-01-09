@@ -92,6 +92,10 @@ public class RecordTask extends AbstractTransformTask {
 			convertInputEchoStream();
 			concatStream();
 			recordTask();
+		} catch (IOException e) {
+			// TODO File in/out error
+			e.printStackTrace();
+			setActive(false);
 		} finally {
 			unlock();
 		}
@@ -113,9 +117,9 @@ public class RecordTask extends AbstractTransformTask {
 			LinkedList<HistoryBuffer> tempHistoryList = new LinkedList<>();
 
 			tempHistoryList.addAll(historyList);
-			boolean result = true;
-			while (result) {
-				result = false;
+			boolean loop = true;
+			while (loop) {
+				loop = false;
 
 				LinkedList<HistoryBuffer> loopHistoryList = new LinkedList<>();
 				loopHistoryList.addAll(tempHistoryList);
@@ -133,8 +137,8 @@ public class RecordTask extends AbstractTransformTask {
 							int compSize = curLen > prevLen ? prevLen : curLen;
 
 							byte[] partPrevBuf = prevHistory
-									.getStream(compSize);
-							byte[] partCurBuf = curHistory.getStream(compSize);
+									.cutStream(compSize);
+							byte[] partCurBuf = curHistory.cutStream(compSize);
 
 							if (Arrays.equals(partPrevBuf, partCurBuf)) {
 								HistoryBuffer history = new HistoryBuffer(
@@ -143,7 +147,7 @@ public class RecordTask extends AbstractTransformTask {
 								tempHistoryList.add(history);
 
 								if (prevLen > compSize) {
-									byte[] restBuf = prevHistory.getStream();
+									byte[] restBuf = prevHistory.cutStream();
 									history = new HistoryBuffer(
 											prevHistory.getType());
 									history.addStream(restBuf);
@@ -151,7 +155,7 @@ public class RecordTask extends AbstractTransformTask {
 								}
 
 								if (curLen > compSize) {
-									byte[] restBuf = curHistory.getStream();
+									byte[] restBuf = curHistory.cutStream();
 									history = new HistoryBuffer(
 											curHistory.getType());
 									history.addStream(restBuf);
@@ -160,7 +164,7 @@ public class RecordTask extends AbstractTransformTask {
 									prevHistory = null;
 								}
 
-								result = true;
+								loop = true;
 								continue;
 
 							} else {
@@ -189,8 +193,8 @@ public class RecordTask extends AbstractTransformTask {
 			for (HistoryBuffer curHistory : historyList) {
 				if (prevHistory.getType().equals(curHistory.getType())) {
 
-					byte[] prevBuf = prevHistory.getStream();
-					byte[] curBuf = curHistory.getStream();
+					byte[] prevBuf = prevHistory.cutStream();
+					byte[] curBuf = curHistory.cutStream();
 
 					int prevSize = prevBuf.length;
 					int curSize = curBuf.length;
@@ -214,7 +218,7 @@ public class RecordTask extends AbstractTransformTask {
 		}
 	}
 
-	private void recordTask() throws TaskSleepRequired {
+	private void recordTask() throws TaskSleepRequired, IOException {
 		if (historyList.size() > 0) {
 			StreamType type0 = historyList.get(0).getType();
 			if (historyList.size() == 1) {
@@ -222,7 +226,7 @@ public class RecordTask extends AbstractTransformTask {
 						|| type0.equals(StreamType.InputEcho)) {
 					throw new TaskSleepRequired();
 				}
-			} else {
+			} else if (historyList.size() == 2) {
 				StreamType type1 = historyList.get(1).getType();
 				if (type0.equals(StreamType.InputEcho)
 						&& (type1.equals(StreamType.Input))) {
@@ -230,29 +234,37 @@ public class RecordTask extends AbstractTransformTask {
 				}
 			}
 
-			HistoryBuffer history = historyList.poll();
-
-			StreamType type = history.getType();
-			byte[] buf = history.getStream();
-
-			for (RecordTransformer trans : exts.values()) {
-				buf = trans.transform(buf, type);
-			}
+			HistoryBuffer historyBuffer = historyList.poll();
 
 			try {
-				// sequenceの指す対象は現在の位置。setNextLine後の初期値はnull。
 				record.setNextSequence();
 
-				Sequence sequence = record.getSequence();
-				while (!sequence.checkFile(buf)) {
-					record.setNextLine();
-					record.setNextSequence();
-					sequence = record.getSequence();
+				while (true) {
+					Sequence sequence = record.getSequence();
+
+					int cmpLen = sequence.compareLength(historyBuffer);
+					if (cmpLen >= 0) {
+						if (sequence.compareByte(historyBuffer)) {
+							int fileLen = sequence.getLength();
+							historyBuffer.cutStream(fileLen);
+							if (cmpLen == 0) {
+								break;
+							}
+							record.setNextSequence();
+							continue;
+						}
+
+						record.setNextLine();
+						record.setNextSequence();
+					}
 				}
 
 			} catch (LineNotFound e) {
 				try {
 					record.createNextLine();
+					StreamType type = historyBuffer.getType();
+					byte[] buf = recordTransform(historyBuffer);
+
 					Sequence sequence = record.createNextSequence(type);
 					sequence.setByteArray(buf);
 
@@ -260,11 +272,23 @@ public class RecordTask extends AbstractTransformTask {
 				}
 
 			} catch (SequenceNotFound e) {
+				StreamType type = historyBuffer.getType();
+				byte[] buf = recordTransform(historyBuffer);
+
 				Sequence sequence = record.createNextSequence(type);
 				sequence.setByteArray(buf);
 			}
 		} else {
 			throw new TaskSleepRequired();
 		}
+	}
+
+	private byte[] recordTransform(HistoryBuffer historyBuffer) {
+		byte[] buf = historyBuffer.cutStream();
+		StreamType type = historyBuffer.getType();
+		for (RecordTransformer trans : exts.values()) {
+			buf = trans.transform(buf, type);
+		}
+		return buf;
 	}
 }
