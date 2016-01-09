@@ -2,10 +2,10 @@ package com.github.AsaiYusuke.SushMock.task.transform;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import com.github.AsaiYusuke.SushMock.exception.InvalidDataFound;
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
 import com.github.AsaiYusuke.SushMock.exception.TaskSleepRequired;
@@ -82,15 +82,13 @@ public class SimulateTask extends AbstractTransformTask {
 			Sequence sequence = record.getNextSequence();
 
 			switch (sequence.getType()) {
+			case Input:
+			case InputEcho:
+				inputTask(sequence);
+				break;
 			case Output:
 			case Error:
 				outputTask(sequence);
-				break;
-			case Input:
-				inputTask(sequence);
-				break;
-			case InputEcho:
-				inputEchoTask(sequence);
 				break;
 			default:
 				break;
@@ -99,16 +97,23 @@ public class SimulateTask extends AbstractTransformTask {
 			throw new TaskSleepRequired();
 
 		} catch (IOException e) {
-			// TODO ここはエラー
-			e.printStackTrace();
+			System.out.println("Error: IOException");
 			setActive(false);
-		} catch (LineNotFound e) {
-			// TODO ここはエラー
-			e.printStackTrace();
+
+		} catch (InvalidDataFound e) {
+			System.out.println("Error: InvalidDataFound");
+			printLog(e.getPrevSequence());
+			String stream = "";
+			try {
+				stream = new String(e.getStream(), "UTF-8");
+				System.out.println("Last Stream: " + stream);
+			} catch (UnsupportedEncodingException e1) {
+			}
 			setActive(false);
+
 		} catch (SequenceNotFound e) {
 			// Normal Exit
-			System.out.println("completed.");
+			System.out.println("Completed");
 			setActive(false);
 		}
 	}
@@ -125,69 +130,66 @@ public class SimulateTask extends AbstractTransformTask {
 		return err.getDst();
 	}
 
+	private void inputTask(Sequence sequence)
+			throws SequenceNotFound, IOException, InvalidDataFound {
+		try {
+			lock();
+			int cmpLen = sequence.compareLength(historyBuffer);
+			if (cmpLen >= 0) {
+				record.setNextSequence();
+
+				if (sequence.compareByte(historyBuffer)) {
+					printLog(sequence);
+
+					int fileLen = sequence.getLength();
+					historyBuffer.cutStream(fileLen);
+
+					if (cmpLen == 0) {
+						historyBuffer.rewind();
+					}
+
+					if (sequence.getType() == StreamType.InputEcho) {
+						writeBuffer(sequence);
+					}
+
+					return;
+
+				} else {
+					try {
+						record.setNextLine();
+					} catch (LineNotFound e) {
+						throw new InvalidDataFound(sequence,
+								historyBuffer.getStream());
+					}
+				}
+			}
+		} finally {
+			unlock();
+		}
+	}
+
 	private void outputTask(Sequence sequence)
 			throws SequenceNotFound, IOException {
 
 		record.setNextSequence();
 
+		printLog(sequence);
+
+		writeBuffer(sequence);
+	}
+
+	private void writeBuffer(Sequence sequence) throws IOException {
 		byte[] buf = simulateTransform(sequence);
-		StreamType type = sequence.getType();
-		if (type == StreamType.Output) {
+		switch (sequence.getType()) {
+		case Output:
+		case InputEcho:
 			out.getSrc().write(buf);
-		} else if (type == StreamType.Error) {
+			break;
+		case Error:
 			err.getSrc().write(buf);
-		}
-	}
-
-	private void inputTask(Sequence sequence)
-			throws SequenceNotFound, LineNotFound, IOException {
-		Path path = sequence.getPath();
-		try {
-			lock();
-			int bufLen = historyBuffer.getLength();
-			long fileLen = Files.size(path);
-			if (bufLen >= fileLen) {
-				record.setNextSequence();
-				byte[] partBuffer = historyBuffer.getStream((int) fileLen);
-
-				if (!sequence.checkFile(partBuffer)) {
-					record.setNextLine();
-				} else {
-					if (bufLen == fileLen) {
-						historyBuffer.rewind();
-					}
-				}
-			}
-		} finally {
-			unlock();
-		}
-	}
-
-	private void inputEchoTask(Sequence sequence)
-			throws SequenceNotFound, LineNotFound, IOException {
-		// 重複コード・・・
-		Path path = sequence.getPath();
-		try {
-			lock();
-			int bufLen = historyBuffer.getLength();
-			long fileLen = Files.size(path);
-			if (bufLen >= fileLen) {
-				record.setNextSequence();
-				byte[] partBuffer = historyBuffer.getStream((int) fileLen);
-
-				if (!sequence.checkFile(partBuffer)) {
-					record.setNextLine();
-				} else {
-					byte[] buf = simulateTransform(sequence);
-					out.getSrc().write(buf);
-
-					if (bufLen == fileLen) {
-						historyBuffer.rewind();
-					}
-				}
-			}
-		} finally {
-			unlock();
+			break;
+		default:
+			break;
 		}
 	}
 

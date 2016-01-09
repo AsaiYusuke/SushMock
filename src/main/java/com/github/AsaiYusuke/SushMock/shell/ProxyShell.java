@@ -63,16 +63,16 @@ public class ProxyShell implements InvertedShell {
 			if (Constants.Option.getExecutionType() == ExecutionType.Record) {
 				if (client == null || !client.isOpen()) {
 					client = SshClient.setUpDefaultClient();
-					System.err.println("start client");
+					System.out.println("start client");
 					client.start();
 				}
 
 				if (session == null || !session.isOpen()) {
-					System.err.println("connect");
+					System.out.println("connect");
 					session = client.connect(remoteUser, remoteHost, remotePort)
 							.await().getSession();
-					System.err.println("auth");
 
+					System.out.println("auth");
 					switch (authenticatorType) {
 					case Password:
 						session.addPasswordIdentity(remotePass);
@@ -82,20 +82,19 @@ public class ProxyShell implements InvertedShell {
 								KeyTank.getKeyPair(remoteKey));
 						break;
 					}
-
 					AuthFuture auth = session.auth();
 					auth.verify();
 					if (!auth.isSuccess()) {
-						System.err.println("auth error");
 						client.stop();
 						IOException e = new IOException("auth failed.");
 						throw e;
 					}
+					System.out.println("auth successed");
 
 				}
 
 				if (channel == null || !channel.isOpen()) {
-					System.err.println("create channel");
+					System.out.println("create channel");
 
 					channel = session
 							.createChannel(ClientChannel.CHANNEL_SHELL);
@@ -104,18 +103,18 @@ public class ProxyShell implements InvertedShell {
 					channel.setOut(shell.getClientOut());
 					channel.setErr(shell.getClientErr());
 
-					System.err.println("open");
+					System.out.println("channel open");
 					channel.open();
 				}
 
 			} else if (Constants.Option
 					.getExecutionType() == ExecutionType.Simulate) {
-				System.err.println("create channel");
+				System.out.println("create channel");
 
 				if (channel == null || !channel.isOpen()) {
 					channel = new DummyClientChannel();
 
-					System.err.println("open");
+					System.out.println("channel open");
 					channel.open();
 				}
 			}

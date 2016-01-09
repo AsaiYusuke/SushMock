@@ -3,11 +3,11 @@ package com.github.AsaiYusuke.SushMock.record;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Map;
 
 import com.github.AsaiYusuke.SushMock.ext.CompareTransformer;
+import com.github.AsaiYusuke.SushMock.task.transform.HistoryBuffer;
 import com.github.AsaiYusuke.SushMock.util.Constants;
 import com.github.AsaiYusuke.SushMock.util.Constants.StreamType;
 
@@ -68,7 +68,7 @@ public class Sequence {
 
 	private void saveByteArray() {
 		try {
-			Files.write(path, byteArray, StandardOpenOption.WRITE);
+			Files.write(path, byteArray);
 		} catch (IOException e) {
 		}
 	}
@@ -76,6 +76,11 @@ public class Sequence {
 	public void setByteArray(byte[] byteArray) {
 		this.byteArray = byteArray;
 		saveByteArray();
+	}
+
+	public int getLength() {
+		byte[] fileBuf = getByteArray();
+		return fileBuf.length;
 	}
 
 	public Sequence getNextSequence() {
@@ -94,8 +99,8 @@ public class Sequence {
 		this.type = type;
 	}
 
-	public boolean checkFile(byte[] cmpBuf) {
-
+	public int compareLength(HistoryBuffer historyBuffer) throws IOException {
+		byte[] cmpBuf = historyBuffer.getStream();
 		byte[] fileBuf = getByteArray();
 
 		for (CompareTransformer trans : exts.values()) {
@@ -103,15 +108,38 @@ public class Sequence {
 			fileBuf = trans.transform(fileBuf, type);
 		}
 
-		return Arrays.equals(fileBuf, cmpBuf);
+		int cmpLen = cmpBuf.length;
+		int fileLen = fileBuf.length;
+
+		return cmpLen - fileLen;
+	}
+
+	public boolean compareByte(HistoryBuffer historyBuffer) throws IOException {
+		byte[] cmpBuf = historyBuffer.getStream();
+		byte[] fileBuf = getByteArray();
+
+		for (CompareTransformer trans : exts.values()) {
+			cmpBuf = trans.transform(cmpBuf, type);
+			fileBuf = trans.transform(fileBuf, type);
+		}
+
+		int cmpLen = cmpBuf.length;
+		int fileLen = fileBuf.length;
+		if (cmpLen < fileLen) {
+			return false;
+		}
+
+		byte[] partCmpBuf = Arrays.copyOfRange(cmpBuf, 0, fileLen);
+
+		return Arrays.equals(partCmpBuf, fileBuf);
 	}
 
 	public Line getNextLine() {
 		return nextLine;
 	}
 
-	public void setNextLine(Line nextLine2) {
-		this.nextLine = nextLine2;
+	public void setNextLine(Line nextLine) {
+		this.nextLine = nextLine;
 	}
 
 	@Override

@@ -153,8 +153,8 @@ public class Record {
 			String newFileName = getFileName();
 
 			Path srcPath = Paths.get(oldFileName);
-			Files.move(srcPath, srcPath.resolveSibling(newFileName),
-					StandardCopyOption.REPLACE_EXISTING);
+			Path dstPath = Paths.get(newFileName);
+			Files.move(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {

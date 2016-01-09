@@ -31,6 +31,27 @@ public class HistoryBuffer {
 		streamBuffer.put(buf);
 	}
 
+	public byte[] cutStream() {
+		int length = getLength();
+		return cutStream(length);
+	}
+
+	public byte[] cutStream(int length) {
+		int pos = streamBuffer.position();
+		byte[] buffer = new byte[length];
+		try {
+			streamBuffer.reset();
+		} catch (InvalidMarkException e) {
+			streamBuffer.rewind();
+		}
+		streamBuffer.get(buffer);
+
+		streamBuffer.mark();
+		streamBuffer.position(pos);
+
+		return buffer;
+	}
+
 	public byte[] getStream() {
 		int length = getLength();
 		return getStream(length);
@@ -46,7 +67,6 @@ public class HistoryBuffer {
 		}
 		streamBuffer.get(buffer);
 
-		streamBuffer.mark();
 		streamBuffer.position(pos);
 
 		return buffer;
