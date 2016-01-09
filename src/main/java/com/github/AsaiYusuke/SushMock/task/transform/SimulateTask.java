@@ -2,8 +2,10 @@ package com.github.AsaiYusuke.SushMock.task.transform;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import com.github.AsaiYusuke.SushMock.exception.InvalidDataFound;
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
 import com.github.AsaiYusuke.SushMock.exception.TaskSleepRequired;
@@ -95,16 +97,23 @@ public class SimulateTask extends AbstractTransformTask {
 			throw new TaskSleepRequired();
 
 		} catch (IOException e) {
-			// TODO ここはエラー
-			e.printStackTrace();
+			System.out.println("Error: IOException");
 			setActive(false);
-		} catch (LineNotFound e) {
-			// TODO ここはエラー
-			e.printStackTrace();
+
+		} catch (InvalidDataFound e) {
+			System.out.println("Error: InvalidDataFound");
+			printLog(e.getPrevSequence());
+			String stream = "";
+			try {
+				stream = new String(e.getStream(), "UTF-8");
+				System.out.println("Last Stream: " + stream);
+			} catch (UnsupportedEncodingException e1) {
+			}
 			setActive(false);
+
 		} catch (SequenceNotFound e) {
 			// Normal Exit
-			System.out.println("completed.");
+			System.out.println("Completed");
 			setActive(false);
 		}
 	}
@@ -122,7 +131,7 @@ public class SimulateTask extends AbstractTransformTask {
 	}
 
 	private void inputTask(Sequence sequence)
-			throws SequenceNotFound, LineNotFound, IOException {
+			throws SequenceNotFound, IOException, InvalidDataFound {
 		try {
 			lock();
 			int cmpLen = sequence.compareLength(historyBuffer);
@@ -130,6 +139,8 @@ public class SimulateTask extends AbstractTransformTask {
 				record.setNextSequence();
 
 				if (sequence.compareByte(historyBuffer)) {
+					printLog(sequence);
+
 					int fileLen = sequence.getLength();
 					historyBuffer.cutStream(fileLen);
 
@@ -141,8 +152,15 @@ public class SimulateTask extends AbstractTransformTask {
 						writeBuffer(sequence);
 					}
 
+					return;
+
 				} else {
-					record.setNextLine();
+					try {
+						record.setNextLine();
+					} catch (LineNotFound e) {
+						throw new InvalidDataFound(sequence,
+								historyBuffer.getStream());
+					}
 				}
 			}
 		} finally {
@@ -154,6 +172,8 @@ public class SimulateTask extends AbstractTransformTask {
 			throws SequenceNotFound, IOException {
 
 		record.setNextSequence();
+
+		printLog(sequence);
 
 		writeBuffer(sequence);
 	}

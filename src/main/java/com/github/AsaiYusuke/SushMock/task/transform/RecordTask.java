@@ -245,6 +245,8 @@ public class RecordTask extends AbstractTransformTask {
 					int cmpLen = sequence.compareLength(historyBuffer);
 					if (cmpLen >= 0) {
 						if (sequence.compareByte(historyBuffer)) {
+							printLog(sequence);
+
 							int fileLen = sequence.getLength();
 							historyBuffer.cutStream(fileLen);
 							if (cmpLen == 0) {
@@ -253,10 +255,10 @@ public class RecordTask extends AbstractTransformTask {
 							record.setNextSequence();
 							continue;
 						}
-
-						record.setNextLine();
-						record.setNextSequence();
 					}
+
+					record.setNextLine();
+					record.setNextSequence();
 				}
 
 			} catch (LineNotFound e) {
@@ -268,6 +270,8 @@ public class RecordTask extends AbstractTransformTask {
 					Sequence sequence = record.createNextSequence(type);
 					sequence.setByteArray(buf);
 
+					printLog(sequence);
+
 				} catch (SequenceNotFound e1) {
 				}
 
@@ -277,6 +281,9 @@ public class RecordTask extends AbstractTransformTask {
 
 				Sequence sequence = record.createNextSequence(type);
 				sequence.setByteArray(buf);
+
+				printLog(sequence);
+
 			}
 		} else {
 			throw new TaskSleepRequired();

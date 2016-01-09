@@ -138,8 +138,8 @@ public class Sequence {
 		return nextLine;
 	}
 
-	public void setNextLine(Line nextLine2) {
-		this.nextLine = nextLine2;
+	public void setNextLine(Line nextLine) {
+		this.nextLine = nextLine;
 	}
 
 	@Override
