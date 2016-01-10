@@ -6,12 +6,12 @@
 
 # Description
 
-SushMock is a simple standalone testing tool for stubbing and mocking SSH communications.
-It consists of two functions. Record and Simulate.
+SushMock is a simple standalone testing tool for stubbing and mocking SSH (Secure Shell) communications.
+It consists of two functions, "Record" and "Simulate".
 - Record Mode
-Install between the network of up to real server , and capture data.
+    Install between the network of up to real server , and capture data.
 - Simulate Mode
-No real server needs. Simulates communications using recorded data.
+    No real server needs. Simulates communications using recorded data.
 
 # Key Features
 
@@ -21,8 +21,12 @@ No real server needs. Simulates communications using recorded data.
 
 # Installation
 
-1. Download SushMock.jar
-2. Execute JavaVM
+1. Prepare Java 1.8
+2. Download SushMock.jar
+3. Execute SushMock
+4. Connect SSH tool
+
+## Show Help
 ```sh
 java -jar SushMock.jar -h
 usage: SushMockServer [options]
@@ -38,11 +42,21 @@ usage: SushMockServer [options]
     --remote-port <port>     set the remote server port number [22]
 ```
 
+## Record Mode
+```sh
+java -jar SushMock.jar --mode Record --listen-port 22 --remote-host 192.168.1.1 --remote-port 22
+```
+
+## Simulate Mode
+```sh
+java -jar SushMock.jar --mode Simulate --listen-port 22
+```
+
 # Issues
 
 - SSH client can't use hmac-sha2-512 algorithm
-This is a problem of Apache MINA that SushMock is using the SSH connection
+    This is a problem of Apache MINA that SushMock is using the SSH connection
 
 # License
 
-Apache License Version 2.0.
+[Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
