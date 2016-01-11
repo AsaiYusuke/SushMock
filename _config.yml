@@ -1,0 +1,14 @@
+name: SushMock
+description: SSH Mock Test Tool
+meta_description: "SSH Mock Test Tool"
+
+markdown: redcarpet
+highlighter: pygments
+logo: false
+baseurl: /SushMock
+domain_name: 'http://AsaiYusuke.github.io/SushMock'
+google_analytics: 'UA-XXXXXXXX-X'
+
+# Details for the RSS feed generator
+url:            'http://AsaiYusuke.github.io/SushMock'
+author:         'Asai Yusuke'
