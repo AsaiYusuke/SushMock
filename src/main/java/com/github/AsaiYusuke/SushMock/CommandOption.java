@@ -29,7 +29,6 @@ import org.apache.commons.cli.ParseException;
 
 import com.github.AsaiYusuke.SushMock.ext.Extension;
 import com.github.AsaiYusuke.SushMock.ext.ExtensionLoader;
-import com.github.AsaiYusuke.SushMock.ext.defaultExt.DateMaskCompareTransformer;
 import com.github.AsaiYusuke.SushMock.util.Constants;
 import com.github.AsaiYusuke.SushMock.util.Constants.ExecutionType;
 import com.google.common.base.Predicate;
@@ -41,24 +40,24 @@ public class CommandOption {
 	private String remoteHost;
 	private int remotePort;
 	private String dataDir;
-	private String fileFormat;
+	private String[] keyDirs;
 	private int historyBufferSize;
 	private String[] extensionClasses;
-	private boolean isVerbose;
+	private boolean isVerbose;// TODO not work yet
 
 	private Map<String, Extension> extensions = newLinkedHashMap();
 
 	public CommandOption() {
-		executionType = ExecutionType.Unknown;
+		executionType = ExecutionType.UNKNOWN;
 		listenPort = Constants.DefaultListenPort;
 		remoteHost = Constants.DefaultRemoteHost;
 		remotePort = Constants.DefaultRemotePort;
 		dataDir = Constants.DefaultDataDir;
-		fileFormat = Constants.DefaultFileFormat;
+		keyDirs = Constants.DefaultKeyDirs;
 		historyBufferSize = Constants.DefaultHistoryBufferSize;
+		extensionClasses = Constants.DefaultExtensions;
 
 		Constants.Option = this;
-
 	}
 
 	public void parse(String[] args) {
@@ -82,10 +81,10 @@ public class CommandOption {
 				.build());
 
 		options.addOption(Option.builder() //
-				.longOpt("format") //
-				.desc("set the mock data file format ["
-						+ Constants.DefaultFileFormat + "]") //
-				.hasArg().argName("format") //
+				.longOpt("key") //
+				.desc("set the ssh key directories ["
+						+ String.join(",", Constants.DefaultKeyDirs) + "]") //
+				.hasArg().argName("key-dirs") //
 				.build());
 
 		options.addOption(Option.builder() //
@@ -117,7 +116,8 @@ public class CommandOption {
 
 		options.addOption(Option.builder() //
 				.longOpt("extensions") //
-				.desc("set the extension class names") //
+				.desc("set the extension class names ["
+						+ String.join(",", Constants.DefaultExtensions) + "]") //
 				.hasArgs().argName("classes") //
 				.build());
 
@@ -138,12 +138,12 @@ public class CommandOption {
 				ExecutionType type = ExecutionType
 						.valueOf(line.getOptionValue("mode"));
 				switch (type) {
-				case Simulate:
-				case Record:
+				case SERVER:
+				case RECORD:
 					executionType = type;
 					break;
 				default:
-					executionType = ExecutionType.Help;
+					executionType = ExecutionType.HELP;
 					break;
 				}
 			}
@@ -152,8 +152,8 @@ public class CommandOption {
 				dataDir = line.getOptionValue("data");
 			}
 
-			if (line.hasOption("format")) {
-				fileFormat = line.getOptionValue("format");
+			if (line.hasOption("key")) {
+				keyDirs = line.getOptionValues("key");
 			}
 
 			if (line.hasOption("buffer-size")) {
@@ -176,31 +176,22 @@ public class CommandOption {
 
 			if (line.hasOption("extensions")) {
 				extensionClasses = line.getOptionValues("extensions");
-
-				extensions.putAll(
-						ExtensionLoader.loadExtension(extensionClasses));
-
-			} else {
-				extensionClasses = new String[] {
-						DateMaskCompareTransformer.class.getName() };
-				extensions.putAll(
-						ExtensionLoader.loadExtension(extensionClasses));
-
 			}
+			extensions.putAll(ExtensionLoader.loadExtension(extensionClasses));
 
 			if (line.hasOption("help")) {
-				executionType = ExecutionType.Help;
+				executionType = ExecutionType.HELP;
 			}
 			if (line.hasOption("verbose")) {
 				isVerbose = true;
 			}
 
 		} catch (ParseException e) {
-			executionType = ExecutionType.Help;
+			executionType = ExecutionType.HELP;
 			footer = e.getMessage();
 		}
 
-		if (executionType == ExecutionType.Help) {
+		if (executionType == ExecutionType.HELP) {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp(
 					SushMockServer.class.getSimpleName() + " [options]", header,
@@ -216,8 +207,8 @@ public class CommandOption {
 		return dataDir;
 	}
 
-	public String getFileFormat() {
-		return fileFormat;
+	public String[] getKeyDirs() {
+		return keyDirs;
 	}
 
 	public int getHistoryBufferSize() {

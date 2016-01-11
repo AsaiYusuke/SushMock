@@ -31,7 +31,7 @@ public class CaptureOutTask extends AbstractStreamTask {
 	protected void task(byte[] buffer) {
 		AbstractTransformTask transformTask = getTransformTask();
 		if (transformTask != null) {
-			transformTask.addStream(StreamType.Output, buffer);
+			transformTask.addStream(StreamType.OUT, buffer);
 		}
 	}
 

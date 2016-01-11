@@ -53,10 +53,10 @@ public class ProxyShell implements InvertedShell {
 		remoteUser = authenticator.getUsername();
 
 		switch (authenticator.getAuthenticatorType()) {
-		case Password:
+		case PASSWORD:
 			remotePass = authenticator.getPassword();
 			break;
-		case PublicKey:
+		case PUBLIC_KEY:
 			remoteKey = authenticator.getPublicKey();
 			break;
 		}
@@ -75,7 +75,7 @@ public class ProxyShell implements InvertedShell {
 		try {
 			shell = new ShellTask();
 
-			if (Constants.Option.getExecutionType() == ExecutionType.Record) {
+			if (Constants.Option.getExecutionType() == ExecutionType.RECORD) {
 				if (client == null || !client.isOpen()) {
 					client = SshClient.setUpDefaultClient();
 					System.out.println("start client");
@@ -89,10 +89,10 @@ public class ProxyShell implements InvertedShell {
 
 					System.out.println("auth");
 					switch (authenticatorType) {
-					case Password:
+					case PASSWORD:
 						session.addPasswordIdentity(remotePass);
 						break;
-					case PublicKey:
+					case PUBLIC_KEY:
 						session.addPublicKeyIdentity(
 								KeyTank.getKeyPair(remoteKey));
 						break;
@@ -123,7 +123,7 @@ public class ProxyShell implements InvertedShell {
 				}
 
 			} else if (Constants.Option
-					.getExecutionType() == ExecutionType.Simulate) {
+					.getExecutionType() == ExecutionType.SERVER) {
 				System.out.println("create channel");
 
 				if (channel == null || !channel.isOpen()) {

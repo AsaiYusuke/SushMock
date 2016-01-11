@@ -46,8 +46,8 @@ public class MyKeyPair {
 		this.dir = dir;
 
 		File directory = new File(dir);
-		Map<String, File> privateFileMap = new HashMap<String, File>();
-		Map<String, File> publicFileMap = new HashMap<String, File>();
+		Map<String, File> privateFileMap = new HashMap<>();
+		Map<String, File> publicFileMap = new HashMap<>();
 
 		for (File file : directory.listFiles()) {
 			String filename = file.getName();

@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 
 import com.github.AsaiYusuke.SushMock.exception.LineNotFound;
 import com.github.AsaiYusuke.SushMock.exception.SequenceNotFound;
-import com.github.AsaiYusuke.SushMock.util.Constants;
 import com.github.AsaiYusuke.SushMock.util.Constants.StreamType;
 
 public class Record {
@@ -242,7 +241,7 @@ public class Record {
 
 		StreamType type = sequence.getType();
 
-		String filename = String.format(Constants.DefaultFileFormat, lineNum,
+		String filename = String.format("%1$02d_%2$04d_%3$s", lineNum,
 				sequenceNum, type);
 
 		if (sequence.getNextLine() != null) {

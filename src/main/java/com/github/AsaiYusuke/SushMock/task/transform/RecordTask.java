@@ -59,7 +59,7 @@ public class RecordTask extends AbstractTransformTask {
 
 	@Override
 	public void addStream(StreamType type, byte[] buf) {
-		if (Constants.Option.getExecutionType() != ExecutionType.Record) {
+		if (Constants.Option.getExecutionType() != ExecutionType.RECORD) {
 			return;
 		}
 
@@ -143,9 +143,9 @@ public class RecordTask extends AbstractTransformTask {
 				HistoryBuffer prevHistory = loopHistoryList.poll();
 				for (HistoryBuffer curHistory : loopHistoryList) {
 					if (prevHistory != null) {
-						if (prevHistory.getType().equals(StreamType.Input)
+						if (prevHistory.getType().equals(StreamType.IN)
 								&& curHistory.getType()
-										.equals(StreamType.Output)) {
+										.equals(StreamType.OUT)) {
 
 							int prevLen = prevHistory.getLength();
 							int curLen = curHistory.getLength();
@@ -157,7 +157,7 @@ public class RecordTask extends AbstractTransformTask {
 
 							if (Arrays.equals(partPrevBuf, partCurBuf)) {
 								HistoryBuffer history = new HistoryBuffer(
-										StreamType.InputEcho);
+										StreamType.IN_ECHO);
 								history.addStream(partPrevBuf);
 								tempHistoryList.add(history);
 
@@ -237,14 +237,14 @@ public class RecordTask extends AbstractTransformTask {
 		if (historyList.size() > 0) {
 			StreamType type0 = historyList.get(0).getType();
 			if (historyList.size() == 1) {
-				if (type0.equals(StreamType.Input)
-						|| type0.equals(StreamType.InputEcho)) {
+				if (type0.equals(StreamType.IN)
+						|| type0.equals(StreamType.IN_ECHO)) {
 					throw new TaskSleepRequired();
 				}
 			} else if (historyList.size() == 2) {
 				StreamType type1 = historyList.get(1).getType();
-				if (type0.equals(StreamType.InputEcho)
-						&& (type1.equals(StreamType.Input))) {
+				if (type0.equals(StreamType.IN_ECHO)
+						&& (type1.equals(StreamType.IN))) {
 					throw new TaskSleepRequired();
 				}
 			}

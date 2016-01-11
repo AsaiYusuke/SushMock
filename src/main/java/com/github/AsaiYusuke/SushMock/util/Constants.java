@@ -15,10 +15,8 @@
  */
 package com.github.AsaiYusuke.SushMock.util;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.github.AsaiYusuke.SushMock.CommandOption;
+import com.github.AsaiYusuke.SushMock.ext.defaultExt.DateMaskCompareTransformer;
 
 public class Constants {
 	public static CommandOption Option;
@@ -30,7 +28,7 @@ public class Constants {
 	 */
 	public static String DefaultKeyFile = "asai.key";
 
-	public static ExecutionType DefaultExecutionType = ExecutionType.Simulate;
+	public static ExecutionType DefaultExecutionType = ExecutionType.SERVER;
 
 	public static int DefaultListenPort = 22;
 	/* モック対象の接続先リモートマシン情報(IPアドレス) */
@@ -40,24 +38,26 @@ public class Constants {
 
 	public static String DefaultDataDir = "data";
 
-	public static String DefaultFileFormat = "%1$02d_%2$04d_%3$s";
-
 	public static int DefaultHistoryBufferSize = 10 * 1024 * 1024;
+
+	public static String[] DefaultExtensions = new String[] {
+			DateMaskCompareTransformer.class.getName() };
+
+	public static String[] DefaultKeyDirs = new String[] {
+			"c:\\some\\where\\ssh-key-dir" };
 
 	public static int PipedStreamSize = 1024 * 1024;
 
-	public static List<String> KeyDir = Arrays
-			.asList("D:\\_home\\BEYOND\\ssh-key");
-
 	public static enum ExecutionType {
-		Unknown, Err, Help, Simulate, Record, // Proxy, Display, Autopilot
+		UNKNOWN, ERROR, HELP, SERVER, CLIENT, RECORD, // PROXY, DISPLAY,
+														// AUTOPILOT
 	}
 
 	public static enum StreamType {
-		Input, InputEcho, Output, Error
+		IN, IN_ECHO, OUT, ERR
 	}
 
 	public static enum AuthenticatorType {
-		Password, PublicKey
+		PASSWORD, PUBLIC_KEY
 	}
 }

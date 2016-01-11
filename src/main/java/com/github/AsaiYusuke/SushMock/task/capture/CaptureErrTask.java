@@ -31,7 +31,7 @@ public class CaptureErrTask extends AbstractStreamTask {
 	protected void task(byte[] buffer) {
 		AbstractTransformTask transformTask = getTransformTask();
 		if (transformTask != null) {
-			transformTask.addStream(StreamType.Error, buffer);
+			transformTask.addStream(StreamType.ERR, buffer);
 		}
 	}
 
