@@ -23,7 +23,7 @@ It consists of two functions, "Record" and "Simulate".
 
 # Installation
 
-1. Prepare Java 1.8
+1. Prepare [Java 1.8](https://www.java.com)
 2. Download SushMock.jar
 3. Execute SushMock
 4. Connect SSH tool
@@ -60,7 +60,7 @@ java -jar SushMock.jar --mode Simulate --listen-port 22
 # Issues
 
 - SSH client can't use hmac-sha2-512 algorithm  
-  This is a problem of Apache MINA that SushMock is using the SSH connection
+  This is a problem of [Apache MINA](https://mina.apache.org/mina-project/index.html) that SushMock is using the SSH connection
 
 # License
 
