@@ -36,7 +36,7 @@ public class CachedAuthenticator
 	public boolean authenticate(String username, String password,
 			ServerSession session) {
 
-		this.authenticatorType = AuthenticatorType.Password;
+		this.authenticatorType = AuthenticatorType.PASSWORD;
 		this.username = username;
 		this.password = password;
 
@@ -51,7 +51,7 @@ public class CachedAuthenticator
 	public boolean authenticate(String username, PublicKey key,
 			ServerSession session) {
 
-		this.authenticatorType = AuthenticatorType.PublicKey;
+		this.authenticatorType = AuthenticatorType.PUBLIC_KEY;
 		this.username = username;
 		this.key = key;
 

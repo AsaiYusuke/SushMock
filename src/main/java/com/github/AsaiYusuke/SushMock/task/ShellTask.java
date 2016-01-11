@@ -73,7 +73,7 @@ public class ShellTask {
 		serverOut = new PipedStream();
 		serverErr = new PipedStream();
 
-		if (Constants.Option.getExecutionType() == ExecutionType.Record) {// RecordShellTaskサブクラスにしたほうがよさそう
+		if (Constants.Option.getExecutionType() == ExecutionType.RECORD) {// RecordShellTaskサブクラスにしたほうがよさそう
 			transform = new RecordTask();
 
 			capIn = new CaptureInTask(serverIn.getDst(), clientIn.getSrc());

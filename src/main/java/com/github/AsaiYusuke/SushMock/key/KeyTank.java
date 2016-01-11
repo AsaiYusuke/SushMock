@@ -28,9 +28,9 @@ public class KeyTank {
 
 	private static void initializeKeyMap() {
 		if (keyMap == null || keyMap.size() == 0) {
-			keyMap = new HashMap<PublicKey, KeyPair>();
+			keyMap = new HashMap<>();
 
-			for (String dir : Constants.KeyDir) {
+			for (String dir : Constants.Option.getKeyDirs()) {
 				MyKeyPair myKeyPair = new MyKeyPair(dir);
 				KeyPair keyPair = myKeyPair.getKeyPair();
 				keyMap.put(keyPair.getPublic(), keyPair);

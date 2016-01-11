@@ -35,7 +35,7 @@ public class SushMockServer {
 		CommandOption option = new CommandOption();
 		option.parse(args);
 
-		if (option.getExecutionType() == ExecutionType.Help) {
+		if (option.getExecutionType() == ExecutionType.HELP) {
 			return;
 		}
 

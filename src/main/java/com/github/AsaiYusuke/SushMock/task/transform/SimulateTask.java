@@ -54,7 +54,7 @@ public class SimulateTask extends AbstractTransformTask {
 		dataDirStr = Constants.Option.getDataDir();
 		record = new Record(dataDirStr);
 
-		historyBuffer = new HistoryBuffer(StreamType.Input);
+		historyBuffer = new HistoryBuffer(StreamType.IN);
 
 		// SimulateTransformer Extensions
 		if (exts == null) {
@@ -65,11 +65,11 @@ public class SimulateTask extends AbstractTransformTask {
 
 	@Override
 	public void addStream(StreamType type, byte[] buf) {
-		if (Constants.Option.getExecutionType() != ExecutionType.Simulate) {
+		if (Constants.Option.getExecutionType() != ExecutionType.SERVER) {
 			return;
 		}
 
-		if (type != StreamType.Input) {
+		if (type != StreamType.IN) {
 			return;
 		}
 
@@ -97,12 +97,12 @@ public class SimulateTask extends AbstractTransformTask {
 			Sequence sequence = record.getNextSequence();
 
 			switch (sequence.getType()) {
-			case Input:
-			case InputEcho:
+			case IN:
+			case IN_ECHO:
 				inputTask(sequence);
 				break;
-			case Output:
-			case Error:
+			case OUT:
+			case ERR:
 				outputTask(sequence);
 				break;
 			default:
@@ -163,7 +163,7 @@ public class SimulateTask extends AbstractTransformTask {
 						historyBuffer.rewind();
 					}
 
-					if (sequence.getType() == StreamType.InputEcho) {
+					if (sequence.getType() == StreamType.IN_ECHO) {
 						writeBuffer(sequence);
 					}
 
@@ -196,11 +196,11 @@ public class SimulateTask extends AbstractTransformTask {
 	private void writeBuffer(Sequence sequence) throws IOException {
 		byte[] buf = simulateTransform(sequence);
 		switch (sequence.getType()) {
-		case Output:
-		case InputEcho:
+		case OUT:
+		case IN_ECHO:
 			out.getSrc().write(buf);
 			break;
-		case Error:
+		case ERR:
 			err.getSrc().write(buf);
 			break;
 		default:
