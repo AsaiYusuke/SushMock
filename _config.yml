@@ -7,7 +7,7 @@ highlighter: pygments
 logo: false
 baseurl: /SushMock
 domain_name: 'http://AsaiYusuke.github.io/SushMock'
-google_analytics: 'UA-XXXXXXXX-X'
+google_analytics: 'UA-52207496-2'
 
 # Details for the RSS feed generator
 url:            'http://AsaiYusuke.github.io/SushMock'
