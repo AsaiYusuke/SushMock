@@ -1,6 +1,6 @@
 # SushMock - Secure Shell Mock testing
 
-[![Build Status](https://travis-ci.org/AsaiYusuke/SushMock.svg?branch=master)](https://travis-ci.org/AsaiYusuke/SushMock)
+[![Build Status](https://travis-ci.org/AsaiYusuke/SushMock.svg?branch=develop)](https://travis-ci.org/AsaiYusuke/SushMock)
 
 - Author : Asai Yusuke
 - Created: Jan 4, 2016
