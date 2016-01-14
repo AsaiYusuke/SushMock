@@ -1,0 +1,17 @@
+# Compiled file
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+
+# Eclipse
+.gradle
+.settings
+bin
+build
+.classpath
+.project
+settings.gradle
