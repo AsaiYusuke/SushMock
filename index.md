@@ -8,13 +8,17 @@ layout: default
 
 # Description
 
-SushMock is a simple standalone testing tool for stubbing and mocking SSH (Secure Shell) communications.
-It consists of two functions, "Record" and "Simulate".
+SushMock is a simple standalone testing tool for stubbing and mocking an SSH server. (Secure Shell)  
+Because it is a standalone tool, there is no need to rewrite your ssh client for the connectivity testing.  
+This tool consists of two functions, "Record" and "Simulate".
 
 - Record Mode  
-  Install between the network of up to real server , and capture data.
+  This mode is used to create the data for the test.
+  It works by installing a network of up to real server, and it looks as a proxy server from your test client.
 - Simulate Mode  
-  No real server needs. Simulates communications using recorded data.
+  With this mode, continuous testing is done.
+  It works without real server.
+  Simulates communications using recorded data.
 
 # Key Features
 
@@ -25,9 +29,12 @@ It consists of two functions, "Record" and "Simulate".
 # Installation
 
 1. Prepare [Java 1.8](https://www.java.com)
-2. Download SushMock.jar
-3. Execute SushMock
-4. Connect SSH tool
+2. Download SushMock
+3. Run the included gradle script, and build the tool
+ - For Windows, run gradlew.bat
+ - For Linux, run gradlew
+3. Execute SushMock.jar
+4. Connect your SSH client to SushMock server
 
 ## Show Help
 
@@ -73,8 +80,10 @@ SushMock required next libraries. (SushMock.jar contains all.)
 # Issues
 
 - SSH client can't use hmac-sha2-512 algorithm  
-  This is a problem of [Apache MINA](https://mina.apache.org/mina-project/index.html) that SushMock is using the SSH connection
-- Public key authenticator don't work
+  This is a problem of [Apache MINA](https://mina.apache.org/mina-project/index.html) that SushMock is using for the SSH connection.
+  Your test client have to use hmac-sha2-256 algorithm or less than this.
+- Public key authenticator doesn't work  
+  In my test environment, since all of the test account is set to password authentication, I can't test.
 
 # License
 
