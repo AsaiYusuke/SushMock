@@ -1,11 +1,14 @@
 apply plugin: 'java'
 apply plugin: 'eu.appsatori.fatjar'
+apply plugin: 'eclipse'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
     jcenter()
 }
+
+configurations { jmockit }
 
 dependencies {
     compile 'org.apache.sshd:sshd-core:1.0.0'
@@ -20,7 +23,10 @@ dependencies {
 
     compile 'com.google.guava:guava:19.0'
 
+    jmockit 'org.jmockit:jmockit:1.21'
+    testCompile configurations.jmockit.dependencies
     testCompile 'junit:junit:4.12'
+
 }
 
 buildscript {
@@ -43,4 +49,10 @@ fatJar {
 	exclude 'META-INF/*.SF'
 	exclude 'META-INF/*.DSA'
 	exclude 'META-INF/*.RSA'
+}
+
+test {
+	// jmockitがjunitよりも前にclasspathが通ってる必要があるので下記の対応を行っています
+	sourceSets.test.compileClasspath = configurations.jmockit + sourceSets.test.compileClasspath
+	sourceSets.test.runtimeClasspath = configurations.jmockit + sourceSets.test.runtimeClasspath
 }
